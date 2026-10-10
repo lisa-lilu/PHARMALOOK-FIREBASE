@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaLook — Application status</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../static/theme.css">
+    <style>
+      body{ display:flex; align-items:center; justify-content:center; padding: 40px 20px; }
+      .status-card{
+        width:100%; max-width: 420px; background:#fff; border:1px solid var(--line);
+        border-radius:20px; padding: 40px 34px; text-align:center;
+        box-shadow: 0 24px 60px -30px rgba(30,50,41,0.35);
+      }
+      .status-card img{ height:52px; margin-bottom: 22px; }
+      .status-icon{
+        width:56px; height:56px; border-radius:50%; margin: 0 auto 18px;
+        display:flex; align-items:center; justify-content:center;
+        background: var(--amber-soft);
+      }
+      .status-icon svg{ width:26px; height:26px; }
+      #p-name{ font-family:'Fraunces', serif; font-size:22px; margin-bottom: 10px; }
+      #p-note{ font-size: 13.5px; color: var(--green-mid); margin-top: 14px; line-height:1.5; }
+    </style>
+</head>
+<body>
+    <div class="status-card">
+      <img src="../static/images/pharmalook-logo.png" alt="PharmaLook">
+      <div class="status-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#9C6A1E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/>
+        </svg>
+      </div>
+      <p id="p-name">Loading...</p>
+      <div id="p-status"></div>
+      <p id="p-note">We'll update this page automatically once an admin reviews your application.</p>
+    </div>
+
+    <script type="module">
+      import { auth, db } from "./firebase-config.js";
+      import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+      import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        // Live-updates: if admin approves while this page is open, it reacts automatically.
+        onValue(ref(db, "pharmacists/" + user.uid), (snap) => {
+          if (!snap.exists()) return;
+          const data = snap.val();
+          document.getElementById("p-name").textContent = data.name;
+          const statusCell = document.getElementById("p-status");
+
+          if (data.status === "pending") {
+            statusCell.innerHTML = '<span class="badge badge-pending">Pending review</span>';
+          } else if (data.status === "approved") {
+            statusCell.innerHTML = '<span class="badge badge-approved">Approved — redirecting...</span>';
+            setTimeout(() => window.location.href = "pdashboard.html", 1500);
+          } else if (data.status === "rejected") {
+            statusCell.innerHTML = '<span class="badge badge-rejected">Rejected</span>';
+          }
+        });
+      });
+    </script>
+</body>
+</html>

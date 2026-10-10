@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaLook — Pharmacy dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+      :root{
+        --cream: #FBF7EE; --paper: #ffffff; --amber: #C98A2C; --amber-deep: #9C6A1E; --amber-pale: #F3E2C2;
+        --green-deep: #1E3229; --green-mid: #3E5C4B; --line: rgba(30,50,41,0.12); --red: #B3432B; --red-soft: #F7E5E0;
+      }
+      *{ box-sizing:border-box; }
+      body{ margin:0; min-height:100vh; background: var(--cream); font-family:'Inter', sans-serif; color: var(--green-deep); }
+      .wrap{ max-width: 980px; margin:0 auto; padding: 28px 24px 60px; }
+
+      .hero{
+        position:relative; background: linear-gradient(120deg, #F3ECDC 0%, var(--cream) 60%);
+        border-radius: 22px; padding: 30px 34px; display:flex; align-items:center; justify-content:space-between;
+        overflow:hidden; margin-bottom: 26px; border: 1px solid var(--line);
+      }
+      .hero-left{ display:flex; align-items:center; gap: 20px; z-index:1; }
+      .avatar{
+        width: 76px; height:76px; border-radius:50%; background:#fff; border: 1px solid var(--line);
+        display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; position:relative;
+        box-shadow: 0 8px 20px -10px rgba(30,50,41,0.25); cursor:pointer;
+      }
+      .avatar img{ width:100%; height:100%; object-fit:cover; }
+      .avatar-edit{ position:absolute; bottom:-2px; right:-2px; width:24px; height:24px; border-radius:50%; background: var(--green-deep); border: 2px solid var(--cream); display:flex; align-items:center; justify-content:center; }
+      .hero-text p.greet{ margin:0; font-size:14px; color: var(--green-mid); }
+      .hero-text h1{ font-family:'Fraunces', serif; font-weight:700; font-size: 30px; margin: 2px 0 6px; text-transform: lowercase; }
+      .hero-text p.sub{ margin:0; font-size:13.5px; color: var(--green-mid); }
+      .logout-link{ z-index:1; display:flex; align-items:center; gap:6px; text-decoration:none; font-size:14px; font-weight:600; color: var(--green-deep); white-space:nowrap; }
+      .logout-link:hover{ color: var(--amber-deep); }
+
+      .location-pill{
+        display:inline-flex; align-items:center; gap:6px; margin-top:8px; font-size:12px; font-weight:600;
+        padding: 4px 10px; border-radius:999px;
+      }
+      .location-pill.on{ background:#E3F3E7; color:#2E7D4F; }
+      .location-pill.off{ background: var(--amber-pale); color: var(--amber-deep); cursor:pointer; }
+      .location-pill svg{ width:12px; height:12px; }
+
+      .section-card{ background: var(--paper); border: 1px solid var(--line); border-radius: 18px; padding: 30px 32px; margin-bottom: 22px; }
+      .section-head{ display:flex; align-items:flex-start; gap:16px; margin-bottom: 24px; }
+      .section-icon{ width:52px; height:52px; border-radius:14px; flex-shrink:0; background: var(--green-deep); display:flex; align-items:center; justify-content:center; }
+      .section-icon svg{ width:24px; height:24px; }
+      .section-eyebrow{ font-size: 11px; letter-spacing:0.1em; text-transform:uppercase; color: var(--amber-deep); font-weight:700; margin-bottom:4px; }
+      .section-head h2{ font-family:'Fraunces', serif; font-size: 24px; margin: 0 0 6px; }
+      .section-head p{ margin:0; font-size:13.5px; color: var(--green-mid); }
+
+      .name-fields{ display:grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      @media (max-width:560px){ .name-fields{ grid-template-columns: 1fr; } }
+      .field{ margin-bottom: 16px; }
+      .field label{ display:block; font-size: 12.5px; font-weight:600; color: var(--green-mid); margin-bottom: 7px; }
+      .field input{
+        width:100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px;
+        font-size:14px; font-family:'Inter', sans-serif; background: var(--cream); color: var(--green-deep);
+        outline:none; transition: border-color 0.2s ease, background 0.2s ease;
+      }
+      .field input:focus{ border-color: var(--amber); background:#fff; }
+
+      .btn{ display:inline-flex; align-items:center; gap:8px; padding: 12px 22px; border-radius: 10px; border:none; font-family:'Inter', sans-serif; font-size:14.5px; font-weight:600; cursor:pointer; transition: background 0.2s ease, box-shadow 0.2s ease; }
+      .btn svg{ width:16px; height:16px; }
+      .btn-primary{ background: var(--green-deep); color: var(--cream); }
+      .btn-primary:hover{ background:#142219; box-shadow: 0 12px 24px -14px rgba(30,50,41,0.5); }
+      .btn-danger{ background: var(--red-soft); color: var(--red); }
+      .btn-danger:hover{ background:#f0d0c8; }
+      .btn-outline{ background: var(--cream); color: var(--green-deep); border:1px solid var(--line); }
+      .btn-outline:hover{ border-color: var(--green-deep); }
+
+      .form-message{ font-size:13.5px; margin-bottom:14px; color: var(--red); min-height:16px; }
+      .form-message.success{ color:#2E7D4F; }
+
+      .remove-row{ display:flex; gap:12px; align-items:flex-end; }
+      .remove-row .field{ flex:1; margin-bottom:0; }
+
+      .stock-row{
+        display:flex; align-items:center; justify-content:space-between; gap:14px;
+        padding: 13px 4px; border-bottom: 1px solid var(--line);
+      }
+      .stock-row:last-child{ border-bottom:none; }
+      .stock-info{ min-width:0; }
+      .stock-name{ font-weight:600; font-size:14.5px; }
+      .stock-meta{ font-size:12.5px; color: var(--green-mid); margin-top:2px; }
+      .stock-price{ font-weight:700; color: var(--amber-deep); white-space:nowrap; font-size:14px; }
+      .stock-actions{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
+      .stock-del-btn{ border:none; background:none; cursor:pointer; color: var(--red); opacity:0.55; padding:4px; display:flex; }
+      .stock-del-btn:hover{ opacity:1; }
+      .stock-del-btn svg{ width:16px; height:16px; }
+      .empty-stock{ text-align:center; color: var(--green-mid); font-size:13.5px; padding: 30px 10px; }
+      .load-more-row{ text-align:center; padding-top: 14px; }
+      .load-more-btn{
+        border:1px solid var(--line); background: var(--cream); color: var(--green-deep);
+        padding: 9px 20px; border-radius:9px; font-size:13px; font-weight:600; cursor:pointer;
+      }
+      .load-more-btn:hover{ border-color: var(--green-deep); }
+      .stock-count-note{ text-align:center; font-size:12px; color: var(--green-mid); margin-top:8px; }
+
+      .footer{ display:flex; align-items:center; justify-content:space-between; padding-top: 18px; margin-top: 10px; font-size:12.5px; color: var(--green-mid); }
+      .footer-brand{ display:flex; align-items:center; gap:8px; font-weight:600; color: var(--green-deep); }
+      .footer-brand svg{ width:16px; height:16px; color: var(--amber-deep); }
+      @media (max-width:640px){ .footer{ flex-direction:column; gap:14px; text-align:center; } }
+    </style>
+</head>
+<body>
+
+<div class="wrap">
+
+    <div class="hero">
+        <div class="hero-left">
+            <div class="avatar" id="avatarWrap" title="Click to change your pharmacy logo">
+                <img src="" alt="Pharmacy logo" id="avatarImg" style="display:none;">
+                <svg id="avatarPlaceholder" viewBox="0 0 24 24" fill="none" stroke="var(--green-mid)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="30" height="30">
+                  <path d="M9 3h6l1 4H8l1-4z"/><path d="M7 7h10l1 13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L7 7z"/>
+                </svg>
+                <input type="file" id="logoInput" accept="image/*" style="display:none;">
+                <div class="avatar-edit">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </div>
+            </div>
+            <div class="hero-text">
+                <p class="greet">Welcome back,</p>
+                <h1 id="pharmacyName">...</h1>
+                <p class="sub">Manage your pharmacy stock efficiently</p>
+                <span class="location-pill off" id="locationPill">📍 Add your exact location</span>
+            </div>
+        </div>
+        <a href="#" id="logoutLink" class="logout-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Log out
+        </a>
+    </div>
+
+    <div class="section-card">
+        <div class="section-head">
+            <div class="section-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#FBF7EE" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l1 4H8l1-4z"/><path d="M7 7h10l1 13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L7 7z"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+            </div>
+            <div>
+                <div class="section-eyebrow">Add to your stock</div>
+                <h2>List a medicine</h2>
+                <p>Fill in the details of the medicine to add it to your inventory.</p>
+            </div>
+        </div>
+
+        <div id="formMessage" class="form-message"></div>
+
+        <form id="addMedicineForm">
+            <div class="name-fields">
+              <div class="field">
+                <label for="Medicinename">Medicine name</label>
+                <input type="text" id="Medicinename" placeholder="e.g. Paracetamol" required>
+              </div>
+              <div class="field">
+                <label for="price">Price</label>
+                <input type="text" id="price" placeholder="e.g. 45" required>
+              </div>
+            </div>
+            <div class="field">
+                <label for="Dosage">Dosage</label>
+                <input type="text" id="Dosage" placeholder="e.g. 500mg" required>
+            </div>
+            <div class="field">
+                <label for="medicinedescription">Description</label>
+                <input type="text" id="medicinedescription" placeholder="Short description" required>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                Add medicine
+            </button>
+        </form>
+    </div>
+
+    <div class="section-card">
+        <div class="section-head">
+            <div class="section-icon" style="background:var(--green-mid);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </div>
+            <div>
+                <div class="section-eyebrow" id="stockCountLabel">Your current stock</div>
+                <h2>What's in your inventory</h2>
+                <p>Everything you've listed shows up here — search to find something fast.</p>
+            </div>
+        </div>
+
+        <div style="position:relative; margin-bottom:16px;">
+            <input type="text" id="stockSearch" placeholder="Search your stock..." style="width:100%; padding:11px 14px 11px 38px; border:1px solid var(--line); border-radius:10px; font-size:14px; font-family:'Inter',sans-serif; background:var(--cream); color:var(--green-deep); outline:none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--green-mid)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); width:15px; height:15px; opacity:0.6;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.4" y2="16.4"/></svg>
+        </div>
+
+        <div id="stockList" style="max-height:480px; overflow-y:auto;">
+            <p style="text-align:center; color:var(--green-mid); font-size:13.5px; padding:20px;">Loading your stock...</p>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-head">
+            <div class="section-icon" style="background:var(--amber);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><polyline points="9 15 12 12 15 15"/></svg>
+            </div>
+            <div>
+                <div class="section-eyebrow">Have a lot of stock?</div>
+                <h2>Bulk import from a spreadsheet</h2>
+                <p>Got hundreds or thousands of medicines? Upload a CSV or Excel file and add them all at once.</p>
+            </div>
+        </div>
+
+        <div id="importMessage" class="form-message"></div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
+            <a href="../medicine-import-template.csv" download class="btn btn-outline" style="text-decoration:none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV template
+            </a>
+            <button type="button" id="downloadExcelTemplate" class="btn btn-outline">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Excel template
+            </button>
+            <label class="btn btn-primary" style="cursor:pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload CSV or Excel file
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display:none;">
+            </label>
+        </div>
+
+        <div id="importPreview" style="display:none;">
+            <p style="font-size:13.5px; color:var(--green-mid); margin-bottom:12px;" id="previewSummary"></p>
+            <button id="confirmImportBtn" class="btn btn-primary">Confirm import</button>
+            <button id="cancelImportBtn" class="btn btn-outline">Cancel</button>
+        </div>
+
+        <p style="font-size:12px; color:var(--green-mid); margin-top:14px; line-height:1.6;">
+            Both file types need these exact column headers in the first row: <code>Medicinename, price, Dosage, medicinedescription</code>. Fill in your rows in Excel or Google Sheets, then upload the file directly — no need to convert formats.
+        </p>
+
+        <div style="display:flex; align-items:center; gap:12px; margin: 22px 0;">
+            <div style="flex:1; height:1px; background:var(--line);"></div>
+            <span style="font-size:11.5px; color:var(--green-mid); text-transform:uppercase; letter-spacing:0.08em;">or paste directly</span>
+            <div style="flex:1; height:1px; background:var(--line);"></div>
+        </div>
+
+        <p style="font-size:13px; color:var(--green-mid); margin-bottom:10px;">
+            Already have your list open in Excel or Google Sheets? Select your rows (name, price, dosage, description columns), copy them (Ctrl+C), and paste below — no file needed.
+        </p>
+        <textarea id="pasteArea" placeholder="Paste your copied rows here...&#10;Example:&#10;Paracetamol	10	500mg	Pain reliever&#10;Amoxicillin	25	250mg	Antibiotic" style="width:100%; min-height:110px; padding:12px 14px; border:1px solid var(--line); border-radius:10px; font-size:13px; font-family:'Inter',sans-serif; background:var(--cream); color:var(--green-deep); outline:none; resize:vertical; margin-bottom:12px;"></textarea>
+        <button id="previewPasteBtn" class="btn btn-outline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Preview pasted data
+        </button>
+    </div>
+
+    <div class="section-card">
+        <div class="section-head">
+            <div class="section-icon" style="background:var(--red-soft);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            </div>
+            <div>
+                <div class="section-eyebrow">Manage your stock</div>
+                <h2>Remove a medicine</h2>
+                <p>Enter the exact name of a medicine to remove it from your listing.</p>
+            </div>
+        </div>
+
+        <form id="removeMedicineForm" class="remove-row">
+            <div class="field">
+              <label for="medicine_name">Medicine name</label>
+              <input type="text" id="medicine_name" placeholder="Enter exact name to remove" required>
+            </div>
+            <button type="submit" class="btn btn-danger">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              Remove
+            </button>
+        </form>
+    </div>
+
+    <div class="footer">
+        <div class="footer-brand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 6v6c0 5 3.8 9.4 9 10 5.2-.6 9-5 9-10V6l-9-4Z"/></svg>
+            PharmaLook <span style="font-weight:400; opacity:0.7;">| Safe. Reliable. Always.</span>
+        </div>
+        <div>© 2026 PharmaLook. All rights reserved.</div>
+    </div>
+
+</div>
+
+    <script type="module">
+      import { auth, db } from "./firebase-config.js";
+      import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+      import {
+        ref, get, push, set, remove, update, query, orderByChild, equalTo
+      } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+      const msg = document.getElementById("formMessage");
+      let pharmacistData = null;
+      let currentUid = null;
+
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          window.location.href = "login.html";
+          return;
+        }
+        currentUid = user.uid;
+
+        const snap = await get(ref(db, "pharmacists/" + user.uid));
+        if (!snap.exists() || snap.val().status !== "approved") {
+          window.location.href = "status.html";
+          return;
+        }
+        pharmacistData = snap.val();
+        document.getElementById("pharmacyName").textContent = pharmacistData.name;
+
+        const avatarImg = document.getElementById("avatarImg");
+        const avatarPlaceholder = document.getElementById("avatarPlaceholder");
+        if (pharmacistData.logoData) {
+          avatarImg.src = pharmacistData.logoData;
+          avatarImg.style.display = "block";
+          avatarPlaceholder.style.display = "none";
+        }
+
+        updateLocationPill();
+        await syncMedicineCoordinates();
+        loadMyStock();
+      });
+
+      // Gives any of this pharmacy's medicines that have no coordinates the pharmacy's
+      // saved location, so they show distance and travel time on the customer search page.
+      async function syncMedicineCoordinates() {
+        if (!pharmacistData.lat || !pharmacistData.lng) return;
+        try {
+          const snap = await get(query(ref(db, "medicines"), orderByChild("pharmacistId"), equalTo(currentUid)));
+          const updates = {};
+          snap.forEach((child) => {
+            const m = child.val();
+            if (!m.lat || !m.lng) {
+              updates["medicines/" + child.key + "/lat"] = pharmacistData.lat;
+              updates["medicines/" + child.key + "/lng"] = pharmacistData.lng;
+            }
+          });
+          if (Object.keys(updates).length > 0) await update(ref(db), updates);
+        } catch (err) {
+          console.error("Couldn't sync medicine coordinates:", err);
+        }
+      }
+
+      // ---- Stock list ----
+      let myStock = [];
+      let visibleCount = 20;
+      const PAGE_SIZE = 20;
+
+      async function loadMyStock() {
+        const myMedsQuery = query(ref(db, "medicines"), orderByChild("pharmacistId"), equalTo(currentUid));
+        const snap = await get(myMedsQuery);
+        myStock = [];
+        if (snap.exists()) {
+          snap.forEach((child) => myStock.push({ id: child.key, ...child.val() }));
+        }
+        myStock.sort((a, b) => a.Medicinename.localeCompare(b.Medicinename));
+        visibleCount = PAGE_SIZE;
+        renderStock(myStock);
+      }
+
+      function renderStock(list) {
+        const container = document.getElementById("stockList");
+        document.getElementById("stockCountLabel").textContent =
+          `Your current stock — ${myStock.length} item${myStock.length === 1 ? "" : "s"}`;
+
+        if (list.length === 0) {
+          container.innerHTML = myStock.length === 0
+            ? '<p class="empty-stock">Nothing listed yet — add your first medicine above.</p>'
+            : '<p class="empty-stock">No matches for that search.</p>';
+          return;
+        }
+
+        const visible = list.slice(0, visibleCount);
+
+        container.innerHTML = "";
+        visible.forEach((item) => {
+          const row = document.createElement("div");
+          row.className = "stock-row";
+          row.innerHTML = `
+            <div class="stock-info">
+              <div class="stock-name">${item.Medicinename}</div>
+              <div class="stock-meta">${item.Dosage || ""}${item.medicinedescription ? " · " + item.medicinedescription : ""}</div>
+            </div>
+            <div class="stock-actions">
+              <span class="stock-price">$${item.price}</span>
+              <button class="stock-del-btn" data-id="${item.id}" title="Remove">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              </button>
+            </div>
+          `;
+          container.appendChild(row);
+        });
+
+        container.querySelectorAll(".stock-del-btn").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            if (!confirm("Remove this medicine from your stock?")) return;
+            await remove(ref(db, "medicines/" + btn.dataset.id));
+            loadMyStock();
+          });
+        });
+
+        if (list.length > visible.length) {
+          const loadMoreRow = document.createElement("div");
+          loadMoreRow.className = "load-more-row";
+          loadMoreRow.innerHTML = `
+            <button class="load-more-btn" id="loadMoreBtn">Show more (${list.length - visible.length} remaining)</button>
+            <p class="stock-count-note">Showing ${visible.length} of ${list.length}</p>
+          `;
+          container.appendChild(loadMoreRow);
+          document.getElementById("loadMoreBtn").addEventListener("click", () => {
+            visibleCount += PAGE_SIZE;
+            renderStock(list);
+          });
+        } else if (list.length > PAGE_SIZE) {
+          const note = document.createElement("p");
+          note.className = "stock-count-note";
+          note.textContent = `Showing all ${visible.length}`;
+          container.appendChild(note);
+        }
+      }
+
+      document.getElementById("stockSearch").addEventListener("input", (e) => {
+        const q = e.target.value.toLowerCase();
+        visibleCount = PAGE_SIZE;
+        renderStock(myStock.filter(m => m.Medicinename.toLowerCase().includes(q)));
+      });
+
+      function updateLocationPill(){
+        const pill = document.getElementById("locationPill");
+        if (pharmacistData.lat && pharmacistData.lng) {
+          pill.textContent = "📍 Location shared";
+          pill.className = "location-pill on";
+          pill.style.cursor = "default";
+        } else {
+          pill.textContent = "📍 Add your exact location";
+          pill.className = "location-pill off";
+          pill.onclick = shareLocation;
+        }
+      }
+
+      function shareLocation(){
+        if (!navigator.geolocation) return;
+        const pill = document.getElementById("locationPill");
+        pill.textContent = "Getting location...";
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            try {
+              await update(ref(db, "pharmacists/" + currentUid), { lat, lng });
+
+              // Also give this pharmacy's existing medicines the new coordinates,
+              // so they show distance and travel time on the customer search page.
+              const medsSnap = await get(query(ref(db, "medicines"), orderByChild("pharmacistId"), equalTo(currentUid)));
+              const updates = {};
+              if (medsSnap.exists()) {
+                medsSnap.forEach((child) => {
+                  updates["medicines/" + child.key + "/lat"] = lat;
+                  updates["medicines/" + child.key + "/lng"] = lng;
+                });
+              }
+              if (Object.keys(updates).length > 0) {
+                await update(ref(db), updates);
+              }
+
+              pharmacistData.lat = lat;
+              pharmacistData.lng = lng;
+              updateLocationPill();
+              loadMyStock();
+            } catch (err) {
+              pill.textContent = "📍 Couldn't save location — try again";
+            }
+          },
+          () => {
+            pill.textContent = "📍 Couldn't get location — try again";
+          }
+        );
+      }
+
+      document.getElementById("avatarWrap").addEventListener("click", () => {
+        document.getElementById("logoInput").click();
+      });
+
+      document.getElementById("logoInput").addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 900 * 1024) { alert("Please choose a smaller image (under ~900KB)."); return; }
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const base64 = reader.result;
+          try {
+            await set(ref(db, "pharmacists/" + currentUid + "/logoData"), base64);
+            const avatarImg = document.getElementById("avatarImg");
+            avatarImg.src = base64;
+            avatarImg.style.display = "block";
+            document.getElementById("avatarPlaceholder").style.display = "none";
+          } catch (err) {
+            alert("Couldn't save logo: " + err.message);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+
+      document.getElementById("logoutLink").addEventListener("click", async (e) => {
+        e.preventDefault();
+        await signOut(auth);
+        window.location.href = "login.html";
+      });
+
+      document.getElementById("addMedicineForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        msg.classList.remove("success");
+        msg.textContent = "";
+
+        const name = document.getElementById("Medicinename").value.trim();
+        const price = parseFloat(document.getElementById("price").value);
+        const dosage = document.getElementById("Dosage").value.trim();
+        const description = document.getElementById("medicinedescription").value.trim();
+
+        try {
+          const myMedsQuery = query(ref(db, "medicines"), orderByChild("pharmacistId"), equalTo(currentUid));
+          const mySnap = await get(myMedsQuery);
+          let alreadyExists = false;
+          if (mySnap.exists()) {
+            mySnap.forEach((child) => {
+              if (child.val().Medicinename.toLowerCase() === name.toLowerCase()) alreadyExists = true;
+            });
+          }
+          if (alreadyExists) {
+            msg.textContent = "You already added this medicine.";
+            return;
+          }
+
+          const newMedRef = push(ref(db, "medicines"));
+          await set(newMedRef, {
+            Medicinename: name,
+            price,
+            Dosage: dosage,
+            medicinedescription: description,
+            pharmacistId: currentUid,
+            pharmacyName: pharmacistData.name,
+            location: pharmacistData.location,
+            lat: pharmacistData.lat || null,
+            lng: pharmacistData.lng || null
+          });
+
+          msg.classList.add("success");
+          msg.textContent = "Medicine added successfully!";
+          e.target.reset();
+          loadMyStock();
+        } catch (err) {
+          msg.textContent = "Error: " + err.message;
+        }
+      });
+
+      document.getElementById("removeMedicineForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        msg.classList.remove("success");
+        msg.textContent = "";
+
+        const name = document.getElementById("medicine_name").value.trim();
+
+        try {
+          const myMedsQuery = query(ref(db, "medicines"), orderByChild("pharmacistId"), equalTo(currentUid));
+          const snap = await get(myMedsQuery);
+          let found = false;
+          if (snap.exists()) {
+            const removals = [];
+            snap.forEach((child) => {
+              if (child.val().Medicinename.toLowerCase() === name.toLowerCase()) {
+                found = true;
+                removals.push(remove(ref(db, "medicines/" + child.key)));
+              }
+            });
+            await Promise.all(removals);
+          }
+          if (!found) {
+            msg.textContent = "Medicine not found.";
+            return;
+          }
+          msg.classList.add("success");
+          msg.textContent = "Medicine removed successfully.";
+          e.target.reset();
+          loadMyStock();
+        } catch (err) {
+          msg.textContent = "Error: " + err.message;
+        }
+      });
+
+      // ---- Bulk import (CSV or Excel) ----
+      const importMsg = document.getElementById("importMessage");
+      const previewBox = document.getElementById("importPreview");
+      const previewSummary = document.getElementById("previewSummary");
+      let parsedRows = [];
+
+      const REQUIRED_COLS = ["Medicinename", "price", "Dosage", "medicinedescription"];
+      const HEADER_ALIASES = {
+        medicinename: "Medicinename", name: "Medicinename",
+        price: "price",
+        dosage: "Dosage",
+        medicinedescription: "medicinedescription", description: "medicinedescription"
+      };
+
+      // Minimal CSV parser: handles quoted fields with commas inside them.
+      function parseCSVText(text) {
+        const rows = [];
+        let row = [], field = "", inQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+          const c = text[i];
+          if (inQuotes) {
+            if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
+            else if (c === '"') { inQuotes = false; }
+            else { field += c; }
+          } else {
+            if (c === '"') inQuotes = true;
+            else if (c === ',') { row.push(field); field = ""; }
+            else if (c === '\n' || c === '\r') {
+              if (field !== "" || row.length > 0) { row.push(field); rows.push(row); row = []; field = ""; }
+            } else { field += c; }
+          }
+        }
+        if (field !== "" || row.length > 0) { row.push(field); rows.push(row); }
+        return rows.filter(r => r.length > 1 || r[0] !== "");
+      }
+
+      // Turns an array-of-arrays (works for both CSV and Excel output) into medicine objects.
+      // Returns { error: "..." } or { rows: [...] }
+      function rowsToMedicines(rows) {
+        if (rows.length < 2) return { error: "That file looks empty." };
+
+        const headerCells = rows[0].map(h => String(h || "").trim());
+        const headerCellsLower = headerCells.map(h => h.toLowerCase());
+
+        // Map found headers to our known field names.
+        const colOrder = headerCellsLower.map(h => HEADER_ALIASES[h] || null);
+        const foundCols = colOrder.filter(Boolean);
+        const missing = REQUIRED_COLS.filter(c => !foundCols.includes(c));
+        if (missing.length > 0) {
+          return { error: "Missing column(s): " + missing.join(", ") + ". Use the template provided." };
+        }
+
+        const dataRows = rows.slice(1).map(r => {
+          const obj = {};
+          colOrder.forEach((key, idx) => { if (key) obj[key] = String(r[idx] ?? "").trim(); });
+          return obj;
+        }).filter(r => r.Medicinename);
+
+        return { rows: dataRows };
+      }
+
+      document.getElementById("fileInput").addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        importMsg.textContent = "";
+        importMsg.classList.remove("success");
+
+        const isExcel = /\.(xlsx|xls)$/i.test(file.name);
+
+        try {
+          let rows;
+          if (isExcel) {
+            const buffer = await file.arrayBuffer();
+            const workbook = XLSX.read(buffer, { type: "array" });
+            const firstSheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[firstSheetName];
+            rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+          } else {
+            const text = await file.text();
+            rows = parseCSVText(text);
+          }
+
+          const result = rowsToMedicines(rows);
+          if (result.error) {
+            importMsg.textContent = result.error;
+            return;
+          }
+
+          parsedRows = result.rows;
+          previewSummary.textContent = `Found ${parsedRows.length} medicine${parsedRows.length === 1 ? "" : "s"} in "${file.name}". Ready to import?`;
+          previewBox.style.display = "block";
+        } catch (err) {
+          importMsg.textContent = "Couldn't read that file: " + err.message;
+        }
+      });
+
+      // ---- Paste-from-spreadsheet import (Excel/Sheets copy-paste, tab-separated) ----
+      document.getElementById("previewPasteBtn").addEventListener("click", () => {
+        importMsg.textContent = "";
+        importMsg.classList.remove("success");
+
+        const raw = document.getElementById("pasteArea").value;
+        if (!raw.trim()) {
+          importMsg.textContent = "Paste some rows first.";
+          return;
+        }
+
+        const lines = raw.split(/\r\n|\r|\n/).filter(l => l.trim() !== "");
+        const delimiter = lines[0].includes("\t") ? "\t" : ",";
+        const rows = lines.map(line => line.split(delimiter));
+
+        // If the first row doesn't look like our known headers, assume raw data
+        // in fixed column order (name, price, dosage, description) with no header row.
+        const firstLower = rows[0].map(c => c.trim().toLowerCase());
+        const looksLikeHeader = firstLower.some(c => HEADER_ALIASES[c]);
+        const finalRows = looksLikeHeader ? rows : [["Medicinename", "price", "Dosage", "medicinedescription"], ...rows];
+
+        const result = rowsToMedicines(finalRows);
+        if (result.error) {
+          importMsg.textContent = result.error;
+          return;
+        }
+
+        parsedRows = result.rows;
+        previewSummary.textContent = `Found ${parsedRows.length} medicine${parsedRows.length === 1 ? "" : "s"} pasted in. Ready to import?`;
+        previewBox.style.display = "block";
+      });
+
+      document.getElementById("cancelImportBtn").addEventListener("click", () => {
+        parsedRows = [];
+        previewBox.style.display = "none";
+        document.getElementById("fileInput").value = "";
+        document.getElementById("pasteArea").value = "";
+      });
+
+      document.getElementById("confirmImportBtn").addEventListener("click", async () => {
+        if (parsedRows.length === 0) return;
+        const btn = document.getElementById("confirmImportBtn");
+        btn.disabled = true;
+        btn.textContent = "Importing...";
+
+        try {
+          const myMedsQuery = query(ref(db, "medicines"), orderByChild("pharmacistId"), equalTo(currentUid));
+          const mySnap = await get(myMedsQuery);
+          const existingNames = new Set();
+          if (mySnap.exists()) {
+            mySnap.forEach((child) => existingNames.add(child.val().Medicinename.toLowerCase()));
+          }
+
+          const updates = {};
+          let addedCount = 0;
+          let skippedCount = 0;
+
+          parsedRows.forEach((row) => {
+            const nameLower = row.Medicinename.toLowerCase();
+            if (existingNames.has(nameLower)) { skippedCount++; return; }
+            existingNames.add(nameLower);
+
+            const newKey = push(ref(db, "medicines")).key;
+            updates["medicines/" + newKey] = {
+              Medicinename: row.Medicinename,
+              price: parseFloat(row.price) || 0,
+              Dosage: row.Dosage,
+              medicinedescription: row.medicinedescription,
+              pharmacistId: currentUid,
+              pharmacyName: pharmacistData.name,
+              location: pharmacistData.location,
+              lat: pharmacistData.lat || null,
+              lng: pharmacistData.lng || null
+            };
+            addedCount++;
+          });
+
+          await update(ref(db), updates);
+
+          importMsg.classList.add("success");
+          importMsg.textContent = `Imported ${addedCount} medicine${addedCount === 1 ? "" : "s"}.` +
+            (skippedCount > 0 ? ` Skipped ${skippedCount} already in your list.` : "");
+          previewBox.style.display = "none";
+          document.getElementById("fileInput").value = "";
+          document.getElementById("pasteArea").value = "";
+          parsedRows = [];
+          loadMyStock();
+        } catch (err) {
+          importMsg.textContent = "Import failed: " + err.message;
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Confirm import";
+        }
+      });
+
+      // ---- Generate a real .xlsx template on the fly ----
+      document.getElementById("downloadExcelTemplate").addEventListener("click", () => {
+        const data = [
+          ["Medicinename", "price", "Dosage", "medicinedescription"],
+          ["Paracetamol", 10, "500mg", "Pain reliever and fever reducer"],
+          ["Amoxicillin", 25, "250mg", "Antibiotic for bacterial infections"],
+          ["Ibuprofen", 15, "200mg", "Anti-inflammatory pain reliever"]
+        ];
+        const worksheet = XLSX.utils.aoa_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Medicines");
+        XLSX.writeFile(workbook, "pharmalook-medicine-template.xlsx");
+      });
+    </script>
+</body>
+</html>

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PharmaLook — Find medicine nearby</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream: #FBF7EE;
+    --paper: #ffffff;
+    --amber: #C98A2C;
+    --amber-deep: #9C6A1E;
+    --amber-pale: #F3E2C2;
+    --green-deep: #1E3229;
+    --green-mid: #3E5C4B;
+    --line: rgba(30,50,41,0.12);
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:'Inter', sans-serif; color: var(--green-deep); background: var(--cream); }
+  h1,h2,h3{ font-family:'Fraunces', serif; margin:0; }
+  a{ color:inherit; }
+  img{ max-width:100%; display:block; }
+
+  /* ---- Topbar ---- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 14px 32px; background: var(--paper); border-bottom: 1px solid var(--line);
+    position:sticky; top:0; z-index:50;
+  }
+  .topbar img.logo{ height: 38px; width:auto; }
+  .nav-actions{ display:flex; align-items:center; gap:14px; }
+  .nav-actions a, .nav-actions button{
+    text-decoration:none; font-size:14px; font-weight:600; cursor:pointer;
+    border:none; background:none; font-family:'Inter', sans-serif; color: var(--green-deep);
+  }
+  .btn-pill{
+    padding: 9px 18px; border-radius: 999px; font-weight:600; font-size:13.5px;
+  }
+  .btn-pill.outline{ border: 1px solid var(--line); }
+  .btn-pill.solid{ background: var(--green-deep); color: var(--cream); border:none; }
+  #userChip{ font-size:13.5px; color: var(--green-mid); }
+
+  /* ---- Hero ---- */
+  .hero{
+    position:relative; min-height: 82vh; display:flex; align-items:center;
+    overflow:hidden; padding: 60px 6vw; background: var(--cream);
+  }
+  .hero-bg{
+    position:absolute; inset:0; z-index:0;
+    background-image: url('static/images/pharmacist-portrait.jpg');
+    background-size: cover; background-position: 78% 25%;
+    animation: kenburns 26s ease-in-out infinite alternate;
+  }
+  @keyframes kenburns{
+    0%{ transform: scale(1) translate(0,0); }
+    100%{ transform: scale(1.1) translate(-1.5%, -1%); }
+  }
+  .hero::after{
+    content:""; position:absolute; inset:0; z-index:1;
+    background: linear-gradient(90deg, var(--cream) 0%, var(--cream) 30%, rgba(251,247,238,0.75) 45%, rgba(251,247,238,0.15) 62%, rgba(251,247,238,0) 78%);
+  }
+  .hero-content{
+    position:relative; z-index:2; max-width: 620px;
+    animation: heroRise 0.9s cubic-bezier(.2,.8,.3,1) both;
+  }
+  @keyframes heroRise{
+    from{ opacity:0; transform: translateY(18px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+  .hero-tag{
+    display:inline-flex; align-items:center; gap:8px; font-size:11.5px; letter-spacing:0.16em;
+    text-transform:uppercase; color: var(--amber-deep); font-weight:700; margin-bottom:18px;
+  }
+  .hero-content h1{ color: var(--green-deep); font-weight:700; font-size: clamp(34px,4.6vw,52px); line-height:1.1; margin-bottom:20px; }
+  .hero-content p{ color: var(--green-mid); font-size:16px; line-height:1.6; margin-bottom:30px; max-width:480px; }
+
+  .hero-search{
+    display:flex; gap:8px; background:#fff; border-radius:14px; padding:8px;
+    box-shadow: 0 20px 44px -22px rgba(30,50,41,0.35); max-width: 500px; border: 1px solid var(--line);
+  }
+  .hero-search input{
+    flex:1; border:none; outline:none; padding: 12px 14px; font-size:14.5px; font-family:'Inter', sans-serif;
+    background:transparent;
+  }
+  .hero-search button{
+    border:none; background: var(--green-deep); color:var(--cream); padding: 12px 26px;
+    border-radius: 9px; font-weight:600; font-size:14px; cursor:pointer;
+  }
+
+  .hero-trust{ display:flex; gap: 34px; margin-top: 32px; flex-wrap:wrap; }
+  .hero-trust-item{ display:flex; align-items:flex-start; gap:10px; }
+  .hero-trust-icon{
+    width:34px; height:34px; border-radius:50%; flex-shrink:0;
+    background: var(--green-pale, #E7EFE9); display:flex; align-items:center; justify-content:center;
+    border: 1px solid var(--line);
+  }
+  .hero-trust-icon svg{ width:15px; height:15px; color: var(--green-mid); }
+  .hero-trust-item strong{ display:block; font-size:13.5px; font-weight:700; color: var(--green-deep); }
+  .hero-trust-item span{ font-size:12px; color: var(--green-mid); }
+  @media (max-width: 900px){
+    .hero{ padding: 50px 6vw; }
+    .hero::after{ background: linear-gradient(180deg, var(--cream) 35%, rgba(251,247,238,0.85) 60%, rgba(251,247,238,0.55) 100%); }
+    .hero-bg{ background-position: center 20%; }
+  }
+
+  /* ---- Sections shared ---- */
+  .section{ padding: 70px 24px; max-width: 1080px; margin: 0 auto; }
+  .eyebrow{
+    font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color: var(--amber-deep);
+    font-weight:700; text-align:center; margin-bottom:10px;
+  }
+  .section h2.center{ text-align:center; font-size: clamp(26px,4vw,34px); margin-bottom:14px; }
+  .section p.center-sub{ text-align:center; color: var(--green-mid); max-width:520px; margin: 0 auto 40px; line-height:1.6; font-size:14.5px; }
+
+  /* ---- Welcome ---- */
+  .welcome{ text-align:center; }
+  .welcome p{ max-width:600px; margin:16px auto 30px; color: var(--green-mid); line-height:1.7; font-size:15px; }
+  .btn-cta{
+    display:inline-flex; align-items:center; gap:8px; background: var(--green-deep); color: var(--cream);
+    padding: 13px 26px; border-radius: 10px; text-decoration:none; font-weight:600; font-size:14.5px;
+  }
+
+  /* ---- About ---- */
+  .about-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items:center; }
+  @media (max-width:800px){ .about-grid{ grid-template-columns:1fr; } }
+  .about-grid p{ color: var(--green-mid); line-height:1.7; font-size:14.5px; margin-top:14px; }
+  .gallery{ display:grid; grid-template-columns: repeat(3, 1fr); gap:14px; }
+  .gallery div{
+    background: var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding: 18px; display:flex; align-items:center; justify-content:center; aspect-ratio:1;
+  }
+
+  /* ---- Features ---- */
+  .features-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width:800px){ .features-grid{ grid-template-columns: 1fr 1fr; } }
+  @media (max-width:520px){ .features-grid{ grid-template-columns: 1fr; } }
+  .feature-card{
+    background: var(--paper); border:1px solid var(--line); border-radius:16px; padding: 26px 22px;
+  }
+  .feature-icon{
+    width:46px; height:46px; border-radius:12px; background: var(--amber-pale);
+    display:flex; align-items:center; justify-content:center; margin-bottom:16px;
+  }
+  .feature-icon img{ width:22px; height:22px; }
+  .feature-card h3{ font-size:17px; margin-bottom:8px; }
+  .feature-card p{ font-size:13.5px; color: var(--green-mid); line-height:1.55; margin:0; }
+
+  /* ---- CTA banner ---- */
+  .cta-banner{
+    background: linear-gradient(135deg, var(--green-deep), #142219);
+    border-radius: 22px; padding: 50px 40px; text-align:center; margin: 0 24px 70px; max-width:1080px; margin-left:auto; margin-right:auto;
+  }
+  .cta-banner p{ color: rgba(251,247,238,0.85); max-width:520px; margin: 0 auto 24px; line-height:1.6; font-size:15px; }
+  .btn-amber{
+    display:inline-flex; align-items:center; gap:8px; background: var(--amber); color:#fff;
+    padding: 13px 28px; border-radius:10px; text-decoration:none; font-weight:600; font-size:14.5px;
+  }
+
+  /* ---- FAQ ---- */
+  .faq-item{ border-bottom: 1px solid var(--line); }
+  .faq-q{
+    display:flex; align-items:center; justify-content:space-between; padding: 20px 4px;
+    cursor:pointer; font-weight:600; font-size:15px;
+  }
+  .faq-q svg{ width:16px; height:16px; flex-shrink:0; transition: transform 0.25s ease; }
+  .faq-item.open .faq-q svg{ transform: rotate(180deg); }
+  .faq-a{ max-height:0; overflow:hidden; transition: max-height 0.3s ease; }
+  .faq-item.open .faq-a{ max-height:200px; }
+  .faq-a p{ padding: 0 4px 20px; color: var(--green-mid); font-size:14px; line-height:1.6; margin:0; }
+
+  /* ---- Footer ---- */
+  .footer{ background: var(--green-deep); color: var(--cream); padding: 60px 24px 30px; }
+  .footer-grid{
+    max-width:1080px; margin:0 auto; display:grid; grid-template-columns: 1.1fr 1fr 1.2fr; gap:40px;
+  }
+  @media (max-width:860px){ .footer-grid{ grid-template-columns: 1fr 1fr; } }
+  @media (max-width:520px){ .footer-grid{ grid-template-columns: 1fr; } }
+  .footer h3{ font-size:14px; margin-bottom:16px; color:#F3E2C2; }
+  .footer-brand img{ height:32px; filter: brightness(0) invert(1); margin-bottom:12px; }
+  .footer-brand p{ font-size:13px; color: rgba(251,247,238,0.7); line-height:1.6; }
+  .footer p, .footer a{ font-size:13.5px; color: rgba(251,247,238,0.85); line-height:1.8; text-decoration:none; }
+  .footer a:hover{ color:#fff; }
+  .footer ul{ list-style:none; margin:0; padding:0; }
+  .footer-form input, .footer-form textarea{
+    width:100%; margin-bottom:10px; padding: 10px 12px; border-radius:8px; border:1px solid rgba(251,247,238,0.2);
+    background: rgba(251,247,238,0.06); color:#fff; font-family:'Inter', sans-serif; font-size:13.5px; outline:none;
+  }
+  .footer-form textarea{ resize:vertical; }
+  .footer-form button{
+    background: var(--amber); color:#fff; border:none; padding:10px 18px; border-radius:8px;
+    font-weight:600; font-size:13.5px; cursor:pointer;
+  }
+  #contactMsg{ font-size:12.5px; margin-top:8px; min-height:16px; color:#F3E2C2; }
+  .footer-bottom{
+    max-width:1080px; margin: 40px auto 0; padding-top:22px; border-top:1px solid rgba(251,247,238,0.14);
+    font-size:12.5px; color: rgba(251,247,238,0.6); text-align:center;
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <a href="index.html"><img class="logo" src="static/images/pharmalook-logo.png" alt="PharmaLook"></a>
+    <div class="nav-actions" id="navActions">
+      <a href="templates/login.html" class="btn-pill outline" id="loginBtn">Login</a>
+      <a href="templates/who_are_you.html" class="btn-pill solid" id="signupBtn">Sign up</a>
+      <span id="userChip" style="display:none;"></span>
+      <a href="#" id="logoutBtn" class="btn-pill outline" style="display:none;">Logout</a>
+    </div>
+  </div>
+
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <span class="hero-tag">● Real-time medicine availability</span>
+      <h1>Find the medicine you need, at the pharmacy nearest you.</h1>
+      <p>PharmaLook connects you with local pharmacies stocking exactly what you're looking for — with pricing and dosage, in real time.</p>
+      <form class="hero-search" id="heroSearch">
+        <input type="text" placeholder="Search for a medicine..." id="heroQuery">
+        <button type="submit">Search</button>
+      </form>
+
+      <div class="hero-trust">
+        <div class="hero-trust-item">
+          <div class="hero-trust-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div><strong>Real-time Stock</strong><span>Live inventory updates</span></div>
+        </div>
+        <div class="hero-trust-item">
+          <div class="hero-trust-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <div><strong>Nearby Pharmacies</strong><span>Find the closest options</span></div>
+        </div>
+        <div class="hero-trust-item">
+          <div class="hero-trust-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><polyline points="9 12 11 14 15 10"/></svg>
+          </div>
+          <div><strong>Trusted &amp; Secure</strong><span>Reliable information</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section welcome">
+    <h2>Welcome to PharmaLook</h2>
+    <p>A convenient platform for finding medicines in nearby pharmacies in real time. Whether you're looking for a prescription or over-the-counter medication, PharmaLook connects you to the closest pharmacy that has it in stock.</p>
+    <a href="templates/who_are_you.html" class="btn-cta">
+      Start searching now
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+  </section>
+
+  <section class="section about-grid">
+    <div>
+      <div class="eyebrow" style="text-align:left;">About PharmaLook</div>
+      <h2>Healthcare access, made quick and simple.</h2>
+      <p>At PharmaLook, we believe finding medicine shouldn't mean pharmacy-hopping. We built a platform that lets you locate prescription and over-the-counter medicines at nearby pharmacies in real time — whether you're at home, on the road, or caring for a loved one.</p>
+      <p>Our mission is to connect people with pharmacies instantly, with full transparency on pricing, availability, and location — for patients, caregivers, and anyone staying on top of their health.</p>
+    </div>
+    <div class="gallery">
+      <div><img src="static/images/photo_2025-05-31_00-23-40-removebg-preview.png" alt=""></div>
+      <div><img src="static/images/pharma-removebg-preview (1).png" alt=""></div>
+      <div><img src="static/images/photo_2025-05-31_00-23-46-removebg-preview.png" alt=""></div>
+      <div><img src="static/images/photo_2025-05-31_00-23-52-removebg-preview.png" alt=""></div>
+      <div><img src="static/images/photo_2025-05-31_00-23-58-removebg-preview.png" alt=""></div>
+      <div><img src="static/images/photo_2025-05-31_00-24-04-removebg-preview.png" alt=""></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="eyebrow">Features</div>
+    <h2 class="center">Everything you need, in one search</h2>
+    <p class="center-sub">A clean, fast way to find what you're looking for — no more calling around.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><img src="static/images/drug.png" alt=""></div>
+        <h3>Real-time availability</h3>
+        <p>Easily check if the medicine you need is in stock at nearby pharmacies.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><img src="static/images/best-price.png" alt=""></div>
+        <h3>Price comparison</h3>
+        <p>See prices from different pharmacies and choose the most affordable option.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><img src="static/images/location.png" alt=""></div>
+        <h3>Location-based search</h3>
+        <p>Quickly find the nearest pharmacy carrying your medication.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><img src="static/images/back-in-time.png" alt=""></div>
+        <h3>24/7 access</h3>
+        <p>Search for medicines anytime — day or night — from your phone or computer.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><img src="static/images/network.png" alt=""></div>
+        <h3>Simple & fast interface</h3>
+        <p>A clean, user-friendly design built for smooth, quick searches.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta-banner">
+    <h2 style="color:#fff; font-size:26px; margin-bottom:14px;">Skip the pharmacy-hopping</h2>
+    <p>Just tell us what medicine you need and where you are — PharmaLook finds it for you in seconds.</p>
+    <a href="templates/who_are_you.html" class="btn-amber">
+      Get started
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+  </div>
+
+  <section class="section" style="max-width:720px;">
+    <div class="eyebrow">FAQ</div>
+    <h2 class="center">Common questions</h2>
+    <p class="center-sub">&nbsp;</p>
+    <div id="faqList">
+      <div class="faq-item">
+        <div class="faq-q">How do I search for medicines?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a"><p>Simply type the name of the medicine in the search bar to see which pharmacies have it in stock.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">How do I know the medicine is available at the pharmacy?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a"><p>PharmaLook shows real-time information on medicine availability from local, registered pharmacies.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I compare prices for the same medicine?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a"><p>Yes — search results show prices from every pharmacy that has the medicine in stock, so you can compare.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="static/images/pharmalook-logo.png" alt="PharmaLook">
+        <p>Connecting you with nearby pharmacies stocking exactly what you need.</p>
+      </div>
+      <div>
+        <h3>Follow us</h3>
+        <ul>
+          <li><a href="#">Facebook</a></li>
+          <li><a href="#">Instagram</a></li>
+          <li><a href="#">Twitter</a></li>
+          <li><a href="#">LinkedIn</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Contact us</h3>
+        <form class="footer-form" id="contactForm">
+          <input type="text" id="cName" placeholder="Your name" required>
+          <input type="email" id="cEmail" placeholder="Your email" required>
+          <textarea id="cMessage" rows="3" placeholder="Your message" required></textarea>
+          <button type="submit">Send message</button>
+          <div id="contactMsg"></div>
+        </form>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 PharmaLook. All rights reserved.</div>
+  </footer>
+
+  <script type="module">
+    import { auth, db } from "./templates/firebase-config.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { ref, push, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    // Header auth state
+    onAuthStateChanged(auth, (user) => {
+      const loginBtn = document.getElementById("loginBtn");
+      const signupBtn = document.getElementById("signupBtn");
+      const userChip = document.getElementById("userChip");
+      const logoutBtn = document.getElementById("logoutBtn");
+
+      if (user) {
+        loginBtn.style.display = "none";
+        signupBtn.style.display = "none";
+        userChip.style.display = "inline";
+        userChip.textContent = user.email;
+        logoutBtn.style.display = "inline-flex";
+      } else {
+        loginBtn.style.display = "inline-flex";
+        signupBtn.style.display = "inline-flex";
+        userChip.style.display = "none";
+        logoutBtn.style.display = "none";
+      }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async (e) => {
+      e.preventDefault();
+      await signOut(auth);
+      window.location.reload();
+    });
+
+    // Hero search -> go to results page
+    document.getElementById("heroSearch").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const q = document.getElementById("heroQuery").value.trim();
+      window.location.href = "templates/look.html?q=" + encodeURIComponent(q);
+    });
+
+    // FAQ accordion
+    document.querySelectorAll(".faq-q").forEach((q) => {
+      q.addEventListener("click", () => {
+        q.closest(".faq-item").classList.toggle("open");
+      });
+    });
+
+    // Contact form -> saves into the database instead of POSTing to a Flask route
+    document.getElementById("contactForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const msgBox = document.getElementById("contactMsg");
+      const name = document.getElementById("cName").value.trim();
+      const email = document.getElementById("cEmail").value.trim();
+      const message = document.getElementById("cMessage").value.trim();
+
+      try {
+        const newRef = push(ref(db, "messages"));
+        await set(newRef, { name, email, message, createdAt: serverTimestamp() });
+        msgBox.textContent = "Message sent — thank you!";
+        e.target.reset();
+      } catch (err) {
+        msgBox.textContent = "Couldn't send right now. Please try again.";
+      }
+    });
+  </script>
+</body>
+</html>

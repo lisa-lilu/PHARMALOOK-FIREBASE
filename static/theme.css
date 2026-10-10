@@ -1,0 +1,337 @@
+/* ===== PharmaLook shared theme ===== */
+/* Apothecary palette: amber glass + deep green, warm cream paper */
+
+:root{
+  --cream: #FBF7EE;
+  --paper: #ffffff;
+  --amber: #C98A2C;
+  --amber-deep: #9C6A1E;
+  --amber-soft: #F3E2C2;
+  --green-deep: #1E3229;
+  --green-mid: #3E5C4B;
+  --green-soft: #E7EFE9;
+  --line: rgba(30,50,41,0.14);
+  --red: #B3432B;
+  --red-soft: #F7E5E0;
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  margin:0;
+  min-height:100vh;
+  background: var(--cream);
+  background-image:
+    radial-gradient(circle at 10% 6%, rgba(201,138,44,0.09), transparent 40%),
+    radial-gradient(circle at 90% 94%, rgba(30,50,41,0.07), transparent 45%);
+  font-family: 'Inter', sans-serif;
+  color: var(--green-deep);
+}
+
+h1, h2, h3{
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+a{ color: inherit; }
+
+/* ---- Top bar used on logged-in pages ---- */
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 14px 32px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+.topbar .logo-mark{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.topbar .logo-mark img{
+  height: 46px;
+  width:auto;
+  display:block;
+}
+.topbar-actions{
+  display:flex;
+  align-items:center;
+  gap: 18px;
+}
+.topbar-actions a{
+  text-decoration:none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--green-mid);
+  display:flex;
+  align-items:center;
+  gap:6px;
+  transition: color 0.2s ease;
+}
+.topbar-actions a:hover{ color: var(--amber-deep); }
+
+/* ---- Centered auth-style page shell (login/signup) ---- */
+.auth-shell{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 40px 20px;
+}
+.auth-card{
+  width:100%;
+  max-width: 420px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 38px 34px 32px;
+  box-shadow: 0 24px 60px -30px rgba(30,50,41,0.35);
+}
+.auth-card.wide{ max-width: 480px; }
+
+.brand-mark{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.brand-mark img{ height: 56px; width:auto; }
+
+.auth-card h2{
+  font-size: 26px;
+  text-align:center;
+  margin-bottom: 6px;
+}
+.auth-sub{
+  text-align:center;
+  color: var(--green-mid);
+  font-size: 14px;
+  margin-bottom: 26px;
+}
+
+/* ---- Form fields ---- */
+.field{ margin-bottom: 16px; }
+.field label{
+  display:block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--green-mid);
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+.field input, .field select{
+  width:100%;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 14.5px;
+  font-family: 'Inter', sans-serif;
+  background: var(--cream);
+  color: var(--green-deep);
+  outline:none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.field input:focus, .field select:focus{
+  border-color: var(--amber);
+  background: #fff;
+}
+.name-fields{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 420px){ .name-fields{ grid-template-columns: 1fr; } }
+
+/* ---- Buttons ---- */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:100%;
+  padding: 12px 18px;
+  border-radius: 10px;
+  border:none;
+  font-family:'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor:pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.btn-primary{
+  background: var(--green-deep);
+  color: var(--cream);
+}
+.btn-primary:hover{ background: #142219; box-shadow: 0 10px 24px -12px rgba(30,50,41,0.5); }
+.btn-amber{
+  background: var(--amber);
+  color: #fff;
+}
+.btn-amber:hover{ background: var(--amber-deep); }
+.btn-outline{
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--green-deep);
+  width:auto;
+  padding: 9px 16px;
+  font-size: 13.5px;
+}
+.btn-outline:hover{ border-color: var(--green-deep); }
+.btn-danger{
+  background: var(--red-soft);
+  color: var(--red);
+  width:auto;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+.btn-danger:hover{ background: #f0d0c8; }
+
+.link-row{
+  text-align:center;
+  margin-top: 20px;
+  font-size: 13.5px;
+  color: var(--green-mid);
+}
+.link-row a{
+  font-weight: 600;
+  text-decoration:none;
+  border-bottom: 1px solid var(--amber);
+  color: var(--green-deep);
+}
+
+.form-message{
+  font-size: 13.5px;
+  text-align:center;
+  margin-bottom: 14px;
+  min-height: 18px;
+  color: var(--red);
+}
+.form-message.success{ color: #2E7D4F; }
+
+/* ---- Page container for app pages ---- */
+.page-shell{
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 20px 60px;
+}
+.section-card{
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 26px 26px 22px;
+  margin-bottom: 22px;
+}
+.section-eyebrow{
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--amber-deep);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.section-card h2{ font-size: 20px; margin-bottom: 16px; }
+
+/* ---- Status badges ---- */
+.badge{
+  display:inline-block;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.badge-pending{ background: var(--amber-soft); color: var(--amber-deep); }
+.badge-approved{ background: var(--green-soft); color: var(--green-mid); }
+.badge-rejected{ background: var(--red-soft); color: var(--red); }
+
+/* ---- Table ---- */
+.pl-table{ width:100%; border-collapse: collapse; }
+.pl-table th{
+  text-align:left;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--green-mid);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.pl-table td{
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14.5px;
+}
+
+/* ---- Request / list cards ---- */
+.request-card{
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.request-info p{ margin: 0 0 4px; }
+.request-info .r-name{ font-weight:600; font-size:15.5px; }
+.request-info .r-meta{ font-size: 13px; color: var(--green-mid); }
+.request-actions{ display:flex; gap:8px; }
+
+.empty-note{
+  text-align:center;
+  color: var(--green-mid);
+  font-size: 14px;
+  padding: 30px 10px;
+}
+
+/* ---- Medicine result card ---- */
+.medicine-card{
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--amber);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+}
+.medicine-card .m-name{
+  font-family:'Fraunces', serif;
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+.medicine-card .m-row{ font-size: 13.5px; color: var(--green-mid); margin: 3px 0; }
+.medicine-card .m-row strong{ color: var(--green-deep); }
+
+/* ---- Search bar ---- */
+.search-bar-wrap{
+  display:flex;
+  gap: 10px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 6px;
+  margin-bottom: 26px;
+}
+.search-bar-wrap input{
+  flex:1;
+  border:none;
+  outline:none;
+  background:transparent;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family:'Inter', sans-serif;
+  color: var(--green-deep);
+}
+.search-bar-wrap button{
+  border:none;
+  background: var(--green-deep);
+  color: var(--cream);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight:600;
+  cursor:pointer;
+}
